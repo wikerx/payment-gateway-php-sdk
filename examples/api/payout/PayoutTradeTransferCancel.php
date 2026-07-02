@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * 代付取消真实网关调用示例，负责按 tradeNo 和 orderNo 请求 /pay-api/payout/trade/transfer-cancel。本示例可能触发代付取消业务校验，不负责商户本地终态保护或资金对账。
+ */
+
 require_once __DIR__ . '/../../bootstrap.php';
 
 $client = openapi_client();

@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * 收银台代收真实网关调用示例，负责组装订单、金额、客户资料和回跳地址并请求 /pay-api/trade/payment。本示例可能创建沙盒代收交易，不负责商户本地幂等、支付完成确认或资金对账。
+ */
+
 require_once __DIR__ . '/../../bootstrap.php';
 
 use Scott\Payment\Sdk\Support\OrderNoGenerator;

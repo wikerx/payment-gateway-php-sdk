@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Scott\Payment\Sdk\Support;
 
 /**
- * OpenAPI 日志脱敏工具。
- *
- * 本类负责在商户联调日志输出前处理 Authorization、JWT、卡号、CVC、邮箱、手机号、证件号和密钥类字段。
- * 商户号不脱敏，便于网关和 SDK 日志直接核对。
+ * @author : scott
+ * @version : v1.0.0
+ * @classname : OpenApiLogSanitizer
+ * @date : 2026-07-02 17:30
+ * @email : scott_x@163.com
+ * @description : OpenAPI 日志脱敏工具，负责在商户联调日志输出前处理 Authorization、JWT、卡号、CVC、邮箱、手机号、证件号和密钥类字段。商户号不脱敏，便于网关和 SDK 日志直接核对；本类不执行加密或业务状态处理。
+ * @status : modify
  */
 final class OpenApiLogSanitizer
 {
@@ -18,6 +21,14 @@ final class OpenApiLogSanitizer
         'privateKey', 'publicKey', 'token', 'secret', 'cvc', 'cvv',
     ];
 
+    /**
+     * 递归脱敏日志对象。
+     *
+     * 本方法只用于日志输出前处理，不修改真实请求对象，不参与签名、加密或资金状态判断。
+     *
+     * @param mixed $value 待脱敏数据。
+     * @return mixed 脱敏后的数据。
+     */
     public static function sanitize($value)
     {
         if (is_array($value)) {
@@ -30,11 +41,26 @@ final class OpenApiLogSanitizer
         return $value;
     }
 
+    /**
+     * 脱敏 HTTP Header。
+     *
+     * Authorization 会保留 Bearer 前缀并脱敏 token，便于商户核对 Header 结构。
+     *
+     * @param array $headers HTTP Header。
+     * @return array 脱敏 Header。
+     */
     public static function sanitizeHeaders(array $headers): array
     {
         return self::sanitize($headers);
     }
 
+    /**
+     * 根据字段名选择脱敏策略。
+     *
+     * @param string $key 字段名。
+     * @param mixed $value 字段值。
+     * @return mixed 脱敏结果。
+     */
     private static function sanitizeByKey(string $key, $value)
     {
         $normalized = strtolower($key);

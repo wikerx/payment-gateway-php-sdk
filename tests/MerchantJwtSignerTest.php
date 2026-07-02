@@ -7,8 +7,22 @@ namespace Scott\Payment\Sdk\Tests;
 use PHPUnit\Framework\TestCase;
 use Scott\Payment\Sdk\Auth\MerchantJwtSigner;
 
+/**
+ * @author : scott
+ * @version : v1.0.0
+ * @classname : MerchantJwtSignerTest
+ * @date : 2026-07-02 17:30
+ * @email : scott_x@163.com
+ * @description : JWT 签名测试，负责验证商户 JWT header 和 claims 与网关鉴权规则一致。本测试不请求网关、不输出完整生产密钥、不修改资金状态。
+ * @status : modify
+ */
 final class MerchantJwtSignerTest extends TestCase
 {
+    /**
+     * 验证商户 JWT 的 header 和 claims。
+     *
+     * 本 case 不访问网关、不输出完整密钥，只确认 merchantId、livemode、iat、exp 等鉴权字段符合网关规则。
+     */
     public function testSignShouldBuildMerchantJwtClaims(): void
     {
         $token = (new MerchantJwtSigner())->sign(

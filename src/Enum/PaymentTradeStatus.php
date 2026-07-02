@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Scott\Payment\Sdk\Enum;
 
 /**
- * 代收交易状态映射。
- *
- * 本类只把网关响应 status 数字映射为商户可读说明，不替代商户系统最终状态机。
+ * @author : scott
+ * @version : v1.0.0
+ * @classname : PaymentTradeStatus
+ * @date : 2026-07-02 17:30
+ * @email : scott_x@163.com
+ * @description : PaymentTradeStatus 枚举定义，负责为商户 SDK 示例和响应解析提供固定取值或状态映射。本类只做本地常量/映射表达，不执行签名、加密、HTTP 调用、资金计算或交易状态流转。
+ * @status : modify
  */
 final class PaymentTradeStatus
 {
@@ -20,6 +24,14 @@ final class PaymentTradeStatus
         5 => ['name' => 'Expired', 'code' => 'expired', 'message' => 'The transaction automatic expired', 'final' => true],
     ];
 
+    /**
+     * 根据网关返回的代收 status 获取本地说明。
+     *
+     * 该方法只做响应展示和示例日志映射，不改变商户订单状态；商户落库前仍需结合回调、查询结果、幂等和终态保护判断。
+     *
+     * @param mixed $status 网关返回的交易状态。
+     * @return array 状态名称、业务 code、说明和是否终态。
+     */
     public static function fromStatus($status): array
     {
         if ($status === null || !array_key_exists((int)$status, self::MAP)) {

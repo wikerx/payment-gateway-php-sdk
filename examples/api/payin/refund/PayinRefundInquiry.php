@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * 检索退款真实网关调用示例，负责按 charge/refundNo 请求 /pay-api/trade/refund/{refundNo}。本示例只读取退款结果，不提交退款、不修改资金状态。
+ */
+
 require_once __DIR__ . '/../../../bootstrap.php';
 
 $charge = 'charge_202607021549576341310';

@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * 代付申请真实网关调用示例，负责组装订单、金额、客户资料和收款卡资料并请求 /pay-api/payout/trade/transfer。本示例可能创建沙盒代付交易，卡号和 CVC 仅用于测试环境。
+ */
+
 require_once __DIR__ . '/../../bootstrap.php';
 
 use Scott\Payment\Sdk\Enum\PaymentMethod;

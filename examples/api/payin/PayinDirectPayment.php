@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * 本地支付直连真实网关调用示例，负责组装 payType=1、paymentMethod=CASHAPP 和支付扩展资料并请求 /pay-api/trade/payment。本示例可能创建沙盒代收交易，支付资料只用于测试环境。
+ */
+
 require_once __DIR__ . '/../../bootstrap.php';
 
 use Scott\Payment\Sdk\Enum\PaymentMethod;

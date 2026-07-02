@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Scott\Payment\Sdk\Exception;
 
 /**
- * SDK 配置异常。
- *
- * 用于配置文件缺失、商户号为空、密钥为空或 URL 非法等启动期错误，不涉及资金状态修改。
+ * @author : scott
+ * @version : v1.0.0
+ * @classname : OpenApiConfigException
+ * @date : 2026-07-02 17:30
+ * @email : scott_x@163.com
+ * @description : OpenApiConfigException 异常类型，负责表达 SDK 在配置、签名、加解密、HTTP、响应解析或参数校验阶段的错误边界。本类不承载明文报文、私钥、完整 JWT 或完整密文，不修改任何业务状态。
+ * @status : modify
  */
 class OpenApiConfigException extends OpenApiException
 {

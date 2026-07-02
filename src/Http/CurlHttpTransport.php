@@ -7,12 +7,24 @@ namespace Scott\Payment\Sdk\Http;
 use Scott\Payment\Sdk\Exception\OpenApiHttpException;
 
 /**
- * curl HTTP 传输层。
- *
- * 本类负责把 SDK 请求真实发送到支付网关，不执行 JWT 签名、不加密请求体、不解密响应 data。
+ * @author : scott
+ * @version : v1.0.0
+ * @classname : CurlHttpTransport
+ * @date : 2026-07-02 17:30
+ * @email : scott_x@163.com
+ * @description : curl HTTP 传输层，负责把 SDK 请求真实发送到支付网关并返回 HTTP 状态码、响应头和响应体。本类不执行 JWT 签名、不加密请求体、不解密响应 data；资金类请求一旦发送可能已到达网关。
+ * @status : modify
  */
 final class CurlHttpTransport implements HttpTransport
 {
+    /**
+     * 使用 curl 真实发送网关请求。
+     *
+     * 请求体和 Header 已由 OpenApiClient 组装完成，本方法只处理 HTTP 传输、超时和原始响应拆分；资金类 POST 请求一旦发送可能已被网关受理。
+     *
+     * @param SdkHttpRequest $request SDK HTTP 请求对象。
+     * @return SdkHttpResponse 包含 HTTP 状态码、响应头和响应体的对象。
+     */
     public function execute(SdkHttpRequest $request): SdkHttpResponse
     {
         $ch = curl_init($request->url);

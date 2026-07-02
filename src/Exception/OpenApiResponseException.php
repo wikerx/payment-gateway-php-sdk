@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Scott\Payment\Sdk\Exception;
 
 /**
- * OpenAPI 响应解析异常。
- *
- * 用于响应 JSON 非法、livemode 不一致、响应 data 解密失败或响应结构不符合 SDK 预期的场景。
+ * @author : scott
+ * @version : v1.0.0
+ * @classname : OpenApiResponseException
+ * @date : 2026-07-02 17:30
+ * @email : scott_x@163.com
+ * @description : OpenApiResponseException 异常类型，负责表达 SDK 在配置、签名、加解密、HTTP、响应解析或参数校验阶段的错误边界。本类不承载明文报文、私钥、完整 JWT 或完整密文，不修改任何业务状态。
+ * @status : modify
  */
 class OpenApiResponseException extends OpenApiException
 {

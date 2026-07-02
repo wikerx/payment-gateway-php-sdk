@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Scott\Payment\Sdk\Exception;
 
 /**
- * SDK 根异常。
- *
- * 本异常只作为商户捕获 SDK 错误的统一父类，不承载明文报文、私钥、完整 JWT 或完整密文。
+ * @author : scott
+ * @version : v1.0.0
+ * @classname : OpenApiException
+ * @date : 2026-07-02 17:30
+ * @email : scott_x@163.com
+ * @description : OpenApiException 异常类型，负责表达 SDK 在配置、签名、加解密、HTTP、响应解析或参数校验阶段的错误边界。本类不承载明文报文、私钥、完整 JWT 或完整密文，不修改任何业务状态。
+ * @status : modify
  */
 class OpenApiException extends \RuntimeException
 {

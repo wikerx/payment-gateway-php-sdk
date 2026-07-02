@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * 检索代收交易真实网关调用示例，负责按 tradeNo 请求 /pay-api/trade/payment/{tradeNo}。本示例只读取交易状态，不创建扣款、不退款、不修改交易状态。
+ */
+
 require_once __DIR__ . '/../../bootstrap.php';
 
 $tradeNo = 'pay_202607021541448605052';

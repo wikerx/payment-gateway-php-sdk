@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * 代收回调接收示例，负责读取 GET/JSON 参数、校验 t 和 signature，并在验签通过后返回 success。生产环境必须在此处补充幂等、金额币种核对、终态保护和订单状态更新。
+ */
+
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Scott\Payment\Sdk\Support\JsonSupport;

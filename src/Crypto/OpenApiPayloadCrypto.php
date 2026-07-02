@@ -11,10 +11,13 @@ use Scott\Payment\Sdk\OpenApiConstants;
 use Scott\Payment\Sdk\Support\JsonSupport;
 
 /**
- * OpenAPI 报文混合加解密组件。
- *
- * 本类负责按 RSA-OAEP-SHA256 + AES-256-GCM compact 协议加密请求 data 和解密响应 data。
- * 本类不签发 JWT、不发起 HTTP 请求、不修改支付、退款、代付或资金状态；加解密失败时不返回明文、私钥或完整密钥材料。
+ * @author : scott
+ * @version : v1.0.0
+ * @classname : OpenApiPayloadCrypto
+ * @date : 2026-07-02 17:30
+ * @email : scott_x@163.com
+ * @description : OpenAPI 报文混合加解密组件，负责按 RSA-OAEP-SHA256 + AES-256-GCM compact 协议加密请求 data 和解密响应 data。本类不签发 JWT、不发起 HTTP 请求、不修改支付、退款、代付或资金状态；明文只应存在于调用链内存中，普通日志不得输出。
+ * @status : modify
  */
 final class OpenApiPayloadCrypto
 {
@@ -22,11 +25,30 @@ final class OpenApiPayloadCrypto
     private const GCM_IV_BYTES = 12;
     private const GCM_TAG_BYTES = 16;
 
+    /**
+     * 使用平台请求公钥加密商户请求明文。
+     *
+     * 每次调用都会生成新的 AES 会话密钥和 IV，因此同一明文多次加密得到的 data 不应相同。
+     * 本方法不签发 JWT、不发起 HTTP 请求、不修改支付、退款、代付或资金状态。
+     *
+     * @param string $plainText 请求业务 JSON 明文。
+     * @param string $recipientPublicKey 平台请求公钥，支持 PEM 或 DER Base64。
+     * @return string compact payload。
+     */
     public function encrypt(string $plainText, string $recipientPublicKey): string
     {
         return $this->encryptToParts($plainText, $recipientPublicKey)->toCompactPayload();
     }
 
+    /**
+     * 使用平台请求公钥加密商户请求明文，并返回五段拆分字段。
+     *
+     * 返回的 encryptedAesKey、iv、cipherText、tag 适合沙盒联调和文档核验；生产日志不建议长期输出完整值。
+     *
+     * @param string $plainText 请求业务 JSON 明文。
+     * @param string $recipientPublicKey 平台请求公钥。
+     * @return OpenApiPayloadParts compact payload 五段结构。
+     */
     public function encryptToParts(string $plainText, string $recipientPublicKey): OpenApiPayloadParts
     {
         if ($plainText === '') {
@@ -55,6 +77,16 @@ final class OpenApiPayloadCrypto
         );
     }
 
+    /**
+     * 使用商户响应私钥解密网关响应 data。
+     *
+     * 解密成功只表示报文完整性和密钥匹配通过，不代表支付、退款、代付或资金业务一定成功。
+     * 调用方仍需根据响应 code、业务 status 和查询接口确认业务结果。
+     *
+     * @param string $compactPayload 网关响应 data。
+     * @param string $receiverPrivateKey 商户响应私钥，支持 PEM 或 DER Base64。
+     * @return string 响应业务 JSON 明文。
+     */
     public function decrypt(string $compactPayload, string $receiverPrivateKey): string
     {
         $parts = $this->splitCompactPayload($compactPayload);
@@ -81,6 +113,14 @@ final class OpenApiPayloadCrypto
         return $plainText;
     }
 
+    /**
+     * 拆分 OpenAPI compact payload。
+     *
+     * 该方法不解密业务明文，只按 protectedHeader.encryptedAesKey.iv.cipherText.tag 拆分，便于沙盒联调和问题排查。
+     *
+     * @param string $compactPayload 请求或响应中的 data 字符串。
+     * @return OpenApiPayloadParts 五段结构。
+     */
     public function splitCompactPayload(string $compactPayload): OpenApiPayloadParts
     {
         if (trim($compactPayload) === '') {
@@ -94,6 +134,13 @@ final class OpenApiPayloadCrypto
         return new OpenApiPayloadParts($parts[0], $header, $parts[1], $parts[2], $parts[3], $parts[4]);
     }
 
+    /**
+     * 生成 compact payload 的 protected header。
+     *
+     * header 会作为 AES-GCM AAD 参与认证，防止 typ、alg、enc 被篡改。
+     *
+     * @return string Base64URL 编码后的 protected header。
+     */
     private function encodeProtectedHeader(): string
     {
         return $this->base64Url(JsonSupport::encode([
@@ -103,6 +150,12 @@ final class OpenApiPayloadCrypto
         ]));
     }
 
+    /**
+     * 解码并校验 compact payload 的 protected header。
+     *
+     * @param string $protectedHeader Base64URL 编码后的 protected header。
+     * @return string header JSON 明文。
+     */
     private function decodeProtectedHeader(string $protectedHeader): string
     {
         $headerJson = $this->base64UrlDecode($protectedHeader);
@@ -115,11 +168,23 @@ final class OpenApiPayloadCrypto
         return $headerJson;
     }
 
+    /**
+     * 执行无 padding 的 Base64URL 编码。
+     *
+     * @param string $bytes 原始字节。
+     * @return string Base64URL 字符串。
+     */
     private function base64Url(string $bytes): string
     {
         return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
     }
 
+    /**
+     * 解码无 padding 的 Base64URL 字符串。
+     *
+     * @param string $value Base64URL 字符串。
+     * @return string 原始字节。
+     */
     private function base64UrlDecode(string $value): string
     {
         $decoded = base64_decode(strtr($value, '-_', '+/'), true);

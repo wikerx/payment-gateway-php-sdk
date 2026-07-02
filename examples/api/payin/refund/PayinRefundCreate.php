@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+/**
+ * 代收退款申请真实网关调用示例，负责按原代收 tradeNo、金额和退款金额请求 /pay-api/trade/refund。本示例可能触发退款业务校验，不负责商户本地退款幂等、余额处理或对账。
+ */
+
 require_once __DIR__ . '/../../../bootstrap.php';
 
 use Scott\Payment\Sdk\Support\OrderNoGenerator;
