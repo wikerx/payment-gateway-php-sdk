@@ -47,17 +47,41 @@ final class CurlHttpTransport implements HttpTransport
         $raw = curl_exec($ch);
         if ($raw === false) {
             $message = curl_error($ch);
-            curl_close($ch);
+            $this->closeCurlHandle($ch);
             throw new OpenApiHttpException('OpenAPI HTTP request failed: ' . $message);
         }
         $statusCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-        curl_close($ch);
+        $this->closeCurlHandle($ch);
         $headerText = substr($raw, 0, $headerSize);
         $body = substr($raw, $headerSize);
         return new SdkHttpResponse($statusCode, $this->parseHeaders($headerText), $body === false ? '' : $body);
     }
 
+    /**
+     * 关闭 curl 句柄。
+     *
+     * PHP 8.5 起 curl_close 已标记为 deprecated，且 PHP 8.0 后 curl handle 对象会自动释放。
+     * 为了兼容 PHP 7.4，同时避免 PHP 8.5 商户日志出现废弃告警，这里只在旧版本中显式关闭。
+     *
+     * @param mixed $ch curl 句柄。
+     */
+    private function closeCurlHandle($ch): void
+    {
+        if (PHP_VERSION_ID < 80500) {
+            curl_close($ch);
+        }
+    }
+
+    /**
+     * 解析 curl 返回的原始响应头。
+     *
+     * 该方法只把 HTTP Header 文本拆成键值数组，不解析或修改响应体、不做业务状态判断、不处理加密 data。
+     * 如果存在重复 Header，后出现的值会覆盖前值，当前 SDK 仅用于调试日志和基础排查。
+     *
+     * @param string $headerText curl 返回的原始响应头文本。
+     * @return array 响应头键值数组。
+     */
     private function parseHeaders(string $headerText): array
     {
         $headers = [];

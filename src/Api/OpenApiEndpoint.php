@@ -129,6 +129,56 @@ final class OpenApiEndpoint
     }
 
     /**
+     * 获取客户创建接口元数据。
+     *
+     * @return self 客户创建接口定义。
+     */
+    public static function customerCreate(): self
+    {
+        return new self('Customer Create', 'POST', OpenApiConstants::CUSTOMER_CREATE_PATH);
+    }
+
+    /**
+     * 获取客户更新接口元数据。
+     *
+     * @return self 客户更新接口定义。
+     */
+    public static function customerUpdate(): self
+    {
+        return new self('Customer Update', 'PUT', OpenApiConstants::CUSTOMER_UPDATE_PATH);
+    }
+
+    /**
+     * 获取客户检索接口元数据。
+     *
+     * @return self 客户检索接口定义。
+     */
+    public static function customerRetrieve(): self
+    {
+        return new self('Customer Retrieve', 'GET', OpenApiConstants::CUSTOMER_RETRIEVE_PATH);
+    }
+
+    /**
+     * 获取客户删除接口元数据。
+     *
+     * @return self 客户删除接口定义。
+     */
+    public static function customerDelete(): self
+    {
+        return new self('Customer Delete', 'DELETE', OpenApiConstants::CUSTOMER_DELETE_PATH);
+    }
+
+    /**
+     * 获取客户列表接口元数据。
+     *
+     * @return self 客户列表接口定义。
+     */
+    public static function customerList(): self
+    {
+        return new self('Customer List', 'GET', OpenApiConstants::CUSTOMER_LIST_PATH);
+    }
+
+    /**
      * 格式化带路径参数的网关地址。
      *
      * 该方法只做字符串占位符替换，不做 URL 编码、不追加 query 参数；调用方应传入已确认格式的交易号、退款号等标识。

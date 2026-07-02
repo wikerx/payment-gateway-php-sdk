@@ -50,6 +50,9 @@ final class OpenApiConstants
     public const BALANCE_RETRIEVE_PATH = '/pay-api/fund/accounts/get';
     public const CUSTOMER_CREATE_PATH = '/pay-api/mer/customers';
     public const CUSTOMER_RETRIEVE_PATH = '/pay-api/mer/customers/%s';
+    public const CUSTOMER_UPDATE_PATH = '/pay-api/mer/customers/%s';
+    public const CUSTOMER_DELETE_PATH = '/pay-api/mer/customers/%s';
+    public const CUSTOMER_LIST_PATH = '/pay-api/mer/customers';
 
     private function __construct()
     {

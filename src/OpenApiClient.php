@@ -24,7 +24,7 @@ use Scott\Payment\Sdk\Support\OrderNoGenerator;
  * @classname : OpenApiClient
  * @date : 2026-07-02 17:30
  * @email : scott_x@163.com
- * @description : 商户 OpenAPI PHP SDK 客户端，负责请求签名、请求加密、响应解密、HTTP 调用和基础参数校验。支付、退款、代付和余额接口会按服务端最新协议使用 Bearer JWT 与 compact payload；本类不负责商户业务幂等落库、资金状态流转、清结算、风控或渠道回调处理。配置中包含 API 私钥、平台请求公钥和商户响应私钥，调试日志仅用于沙盒联调。
+ * @description : 商户 OpenAPI PHP SDK 客户端，负责请求签名、请求加密、响应解密、HTTP 调用和基础参数校验。支付、退款、代付、余额和客户接口会按服务端最新协议使用 Bearer JWT 与 compact payload；本类不负责商户业务幂等落库、资金状态流转、清结算、风控、KYC 或渠道回调处理。配置中包含 API 私钥、平台请求公钥和商户响应私钥，调试日志仅用于沙盒联调。
  * @status : modify
  */
 final class OpenApiClient
@@ -104,7 +104,7 @@ final class OpenApiClient
      */
     public function retrievePayment(string $tradeNo): OpenApiResult
     {
-        return $this->getSecured(OpenApiEndpoint::paymentRetrieve(), $this->uniqueJwtId('PAYMENT_QUERY_'), rawurlencode($this->requireText($tradeNo, 'tradeNo')));
+        return $this->sendWithoutBody(OpenApiEndpoint::paymentRetrieve(), $this->uniqueJwtId('PAYMENT_QUERY_'), rawurlencode($this->requireText($tradeNo, 'tradeNo')));
     }
 
     /**
@@ -131,7 +131,7 @@ final class OpenApiClient
      */
     public function retrieveRefund(string $refundNo): OpenApiResult
     {
-        return $this->getSecured(OpenApiEndpoint::refundRetrieve(), $this->uniqueJwtId('REFUND_QUERY_'), rawurlencode($this->requireText($refundNo, 'refundNo')));
+        return $this->sendWithoutBody(OpenApiEndpoint::refundRetrieve(), $this->uniqueJwtId('REFUND_QUERY_'), rawurlencode($this->requireText($refundNo, 'refundNo')));
     }
 
     /**
@@ -159,7 +159,7 @@ final class OpenApiClient
      */
     public function retrievePayout(string $tradeNo): OpenApiResult
     {
-        return $this->getSecured(OpenApiEndpoint::payoutRetrieve(), $this->uniqueJwtId('PAYOUT_QUERY_'), rawurlencode($this->requireText($tradeNo, 'tradeNo')));
+        return $this->sendWithoutBody(OpenApiEndpoint::payoutRetrieve(), $this->uniqueJwtId('PAYOUT_QUERY_'), rawurlencode($this->requireText($tradeNo, 'tradeNo')));
     }
 
     /**
@@ -194,6 +194,79 @@ final class OpenApiClient
     }
 
     /**
+     * 创建客户。
+     *
+     * 请求会按最新协议加密提交到客户创建接口，可能在网关侧创建沙盒或生产客户资料。
+     * 请求包含姓名、邮箱、电话、地址和证件号等敏感个人信息，SDK 只负责加密传输和日志脱敏；不负责商户本地客户幂等、KYC、状态流转或外部渠道同步。
+     *
+     * @param array $request 客户创建请求，至少包含 firstname、lastname、email、country。
+     * @return OpenApiResult 客户创建响应。
+     */
+    public function createCustomer(array $request): OpenApiResult
+    {
+        $this->validateCustomerRequest($request, 'customer request');
+        return $this->sendEncrypted(OpenApiEndpoint::customerCreate(), OpenApiEndpoint::customerCreate()->path, $request, $this->uniqueJwtId('CUSTOMER_CREATE_'));
+    }
+
+    /**
+     * 更新客户。
+     *
+     * 请求通过 PUT + Bearer JWT + 加密 data 更新网关客户资料，customerId 只作为路径参数，不放入请求体。
+     * 本方法不负责商户本地客户资料同步、幂等落库、KYC 或外部渠道状态同步。
+     *
+     * @param string $customerId 客户 ID，来自创建、检索或列表接口响应。
+     * @param array $request 客户更新请求，至少包含 firstname、lastname、email、country。
+     * @return OpenApiResult 客户更新响应。
+     */
+    public function updateCustomer(string $customerId, array $request): OpenApiResult
+    {
+        $this->validateCustomerRequest($request, 'customer update request');
+        $api = OpenApiEndpoint::customerUpdate();
+        $path = $api->formatPath(rawurlencode($this->requireText($customerId, 'customerId')));
+        return $this->sendEncrypted($api, $path, $request, $this->uniqueJwtId('CUSTOMER_UPDATE_'));
+    }
+
+    /**
+     * 检索客户。
+     *
+     * GET 请求不发送请求体，不修改客户状态；响应 data 会自动解密，可能包含客户个人信息。
+     *
+     * @param string $customerId 客户 ID。
+     * @return OpenApiResult 客户检索响应。
+     */
+    public function retrieveCustomer(string $customerId): OpenApiResult
+    {
+        return $this->sendWithoutBody(OpenApiEndpoint::customerRetrieve(), $this->uniqueJwtId('CUSTOMER_QUERY_'), rawurlencode($this->requireText($customerId, 'customerId')));
+    }
+
+    /**
+     * 删除客户。
+     *
+     * DELETE 请求不发送请求体，网关当前响应 data 为 boolean true。
+     * 删除客户只影响网关客户资料，不删除商户本地客户、订单、支付、退款、代付或对账记录；商户应自行处理本地审计和幂等。
+     *
+     * @param string $customerId 客户 ID。
+     * @return OpenApiResult 删除响应，data=true 表示网关已受理删除。
+     */
+    public function deleteCustomer(string $customerId): OpenApiResult
+    {
+        return $this->sendWithoutBody(OpenApiEndpoint::customerDelete(), $this->uniqueJwtId('CUSTOMER_DELETE_'), rawurlencode($this->requireText($customerId, 'customerId')));
+    }
+
+    /**
+     * 列出所有客户。
+     *
+     * GET 请求不发送请求体，不修改客户资料；响应 data 会自动解密为客户列表。
+     * 返回内容可能包含个人信息，商户日志、导出和页面展示仍需按自身合规要求脱敏。
+     *
+     * @return OpenApiResult 客户列表响应。
+     */
+    public function listCustomers(): OpenApiResult
+    {
+        return $this->execute(OpenApiEndpoint::customerList(), OpenApiConstants::CUSTOMER_LIST_PATH, null, null, $this->uniqueJwtId('CUSTOMER_LIST_'));
+    }
+
+    /**
      * 拆分 OpenAPI compact payload。
      *
      * 本方法只把 data 拆分为 protectedHeader、header、encryptedAesKey、iv、cipherText、tag，便于沙盒联调或文档核验；不会解密业务明文。
@@ -217,7 +290,8 @@ final class OpenApiClient
     private function createPayment(array $request): OpenApiResult
     {
         $this->validatePaymentCreateRequest($request);
-        return $this->postEncrypted(OpenApiEndpoint::paymentCreate(), $request, $this->uniqueJwtId('PAYMENT_CREATE_'));
+        $api = OpenApiEndpoint::paymentCreate();
+        return $this->sendEncrypted($api, $api->path, $request, $this->uniqueJwtId('PAYMENT_CREATE_'));
     }
 
     /**
@@ -233,26 +307,44 @@ final class OpenApiClient
      */
     private function postEncrypted(OpenApiEndpoint $api, array $plainRequest, string $jwtId): OpenApiResult
     {
+        return $this->sendEncrypted($api, $api->path, $plainRequest, $jwtId);
+    }
+
+    /**
+     * 发送带加密请求体的 OpenAPI 请求。
+     *
+     * 该方法支持 POST、PUT 等需要提交业务请求体的接口，会把明文请求数组序列化为 JSON，使用平台请求公钥加密为 compact payload，再封装 livemode + data 发送。
+     * 本方法不做商户业务幂等，客户和资金类请求发生网络异常时商户应优先使用查询接口确认最终状态。
+     *
+     * @param OpenApiEndpoint $api API 元数据。
+     * @param string $path 已格式化的接口路径，可包含路径参数。
+     * @param array $plainRequest 原始业务请求，可能包含金额、客户资料或卡信息。
+     * @param string $jwtId JWT 防重放标识，每次请求必须唯一。
+     * @return OpenApiResult 解密后的 SDK 响应。
+     */
+    private function sendEncrypted(OpenApiEndpoint $api, string $path, array $plainRequest, string $jwtId): OpenApiResult
+    {
         $requestJson = JsonSupport::encode($plainRequest);
         $parts = $this->payloadCrypto->encryptToParts($requestJson, $this->config->getPlatformRequestPublicKey());
         $encryptedRequest = [
             'livemode' => $this->config->isLivemode(),
             'data' => $parts->toCompactPayload(),
         ];
-        return $this->execute($api, $api->path, $plainRequest, $encryptedRequest, $jwtId);
+        return $this->execute($api, $path, $plainRequest, $encryptedRequest, $jwtId);
     }
 
     /**
-     * 发送带 Bearer JWT 的 GET 请求。
+     * 发送带 Bearer JWT 且无请求体的 OpenAPI 请求。
      *
-     * GET 请求没有加密请求体，但响应 data 仍会自动解密；本方法不修改资金或交易状态。
+     * GET、DELETE 等无请求体接口不会发送加密请求 data，但响应 data 仍会自动解密。
+     * 本方法不提交资金变更指令；如果 DELETE 类接口会变更资源状态，应以具体业务方法的注释为准。
      *
      * @param OpenApiEndpoint $api API 元数据。
      * @param string $jwtId JWT 防重放标识。
      * @param string ...$pathArgs 已完成 path 编码的路径参数。
      * @return OpenApiResult 解密后的 SDK 响应。
      */
-    private function getSecured(OpenApiEndpoint $api, string $jwtId, string ...$pathArgs): OpenApiResult
+    private function sendWithoutBody(OpenApiEndpoint $api, string $jwtId, string ...$pathArgs): OpenApiResult
     {
         return $this->execute($api, $api->formatPath(...$pathArgs), null, null, $jwtId);
     }
@@ -409,6 +501,23 @@ final class OpenApiClient
     }
 
     /**
+     * 校验客户创建或更新请求的最小必要字段。
+     *
+     * 该校验只确认 SDK 能构造加密请求，不替代商户侧客户资料合规校验、KYC、去重或网关侧业务校验。
+     *
+     * @param array $request 客户创建或更新请求。
+     * @param string $name 请求名称。
+     */
+    private function validateCustomerRequest(array $request, string $name): void
+    {
+        $this->requireArray($request, $name);
+        $this->requireText($request['firstname'] ?? null, 'firstname');
+        $this->requireText($request['lastname'] ?? null, 'lastname');
+        $this->requireText($request['email'] ?? null, 'email');
+        $this->requireText($request['country'] ?? null, 'country');
+    }
+
+    /**
      * 校验字段必须为非空数组。
      *
      * @param mixed $value 待校验字段。
@@ -453,13 +562,14 @@ final class OpenApiClient
      * 生成单次请求唯一 JWT jti。
      *
      * jti 只用于网关鉴权层防重放，不承担业务幂等职责；业务幂等仍应使用 orderNo、tradeNo 或 charge 等业务字段。
+     * PHP 示例可能被多个 CLI/FPM 进程同时启动，因此这里在时间序列后追加随机后缀，避免跨进程同毫秒请求触发 jti replay。
      *
      * @param string $prefix 场景前缀。
      * @return string 唯一 jti。
      */
     private function uniqueJwtId(string $prefix): string
     {
-        return OrderNoGenerator::generate($prefix);
+        return OrderNoGenerator::generate($prefix) . '_' . bin2hex(random_bytes(6));
     }
 
     /**

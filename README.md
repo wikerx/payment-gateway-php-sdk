@@ -168,6 +168,11 @@ $client = new OpenApiClient($config);
 | `examples/api/payout/PayoutTradeTransfer.php` | 创建代付 |
 | `examples/api/payout/PayoutTradeTransferInquiry.php` | 检索代付 |
 | `examples/api/payout/PayoutTradeTransferCancel.php` | 取消代付 |
+| `examples/api/customers/CustomerCreate.php` | 创建客户 |
+| `examples/api/customers/CustomerUpdate.php` | 更新客户，示例会先创建前置客户 |
+| `examples/api/customers/CustomerRetrieve.php` | 检索客户，示例会先创建前置客户 |
+| `examples/api/customers/CustomerDelete.php` | 删除客户，示例会先创建前置客户 |
+| `examples/api/customers/CustomerList.php` | 列出所有客户 |
 
 运行示例：
 
@@ -197,6 +202,13 @@ php examples/api/payin/refund/PayinRefundInquiry.php
 php examples/api/payout/PayoutTradeTransfer.php
 php examples/api/payout/PayoutTradeTransferInquiry.php
 php examples/api/payout/PayoutTradeTransferCancel.php
+
+# 客户
+php examples/api/customers/CustomerCreate.php
+php examples/api/customers/CustomerUpdate.php
+php examples/api/customers/CustomerRetrieve.php
+php examples/api/customers/CustomerDelete.php
+php examples/api/customers/CustomerList.php
 ```
 
 运行真实 demo 前请确认：
@@ -208,6 +220,7 @@ php examples/api/payout/PayoutTradeTransferCancel.php
 - 如果运行退款、查询、取消示例，已把代码里的 `tradeNo`、`charge`、`orderNo` 替换为自己的测试交易标识。
 
 退款、查询、取消示例中写死的 `tradeNo`、`charge`、`orderNo` 只是沙盒示例值。商户联调时应替换为自己上一步接口返回的真实标识。
+客户更新、检索、删除示例会先创建一个沙盒客户作为前置数据，方便商户直接运行单个 demo。
 
 ## API 调用示例
 
@@ -256,6 +269,47 @@ $result = $client->createPayout([
         'cvc' => '123',
     ],
 ]);
+```
+
+### 客户创建
+
+```php
+use Scott\Payment\Sdk\Support\OrderNoGenerator;
+
+$suffix = OrderNoGenerator::generate('CUS_');
+$result = $client->createCustomer([
+    'firstname' => 'Lily',
+    'lastname' => 'Brown',
+    'email' => 'lily_brown_' . $suffix . '@test.com',
+    'phone' => '13628173752',
+    'identityType' => 'PASSPORT',
+    'identityNo' => 'P' . $suffix,
+    'country' => 'US',
+    'state' => 'CA',
+    'city' => 'Los Angeles',
+    'address' => '123 Main St, Apt 4B',
+    'zipcode' => '90001',
+]);
+```
+
+### 客户更新、检索、删除、列表
+
+```php
+$customerId = $result->getData()['customerId'];
+
+$client->updateCustomer($customerId, [
+    'firstname' => 'ABC',
+    'lastname' => 'Brown',
+    'email' => 'abc_brown_' . OrderNoGenerator::generate('CUS_UPD_') . '@test.com',
+    'country' => 'US',
+]);
+
+$client->retrieveCustomer($customerId);
+
+// 删除客户接口当前网关响应 data=true。
+$client->deleteCustomer($customerId);
+
+$client->listCustomers();
 ```
 
 ## 回调接收
@@ -332,11 +386,12 @@ composer lint
 - compact payload：`protectedHeader.encryptedAesKey.iv.cipherText.tag`
 - protected header：`{"typ":"PAYMENT-PAYLOAD","alg":"RSA-OAEP-256","enc":"A256GCM"}`
 - GET 请求无 body，但仍携带 Bearer JWT
-- POST 请求体：`{"livemode":false,"data":"compactPayload"}`
+- POST / PUT 请求体：`{"livemode":false,"data":"compactPayload"}`
+- DELETE 请求无 body，但仍携带 Bearer JWT，客户删除接口当前响应 `data=true`
 
 ## 注意事项
 
-- `jti` 每次请求必须唯一，SDK 内部使用订单号生成器生成，不复用业务 `tradeNo`。
+- `jti` 每次请求必须唯一，SDK 内部使用时间序列加随机后缀生成，不复用业务 `tradeNo`，避免多 PHP 进程同毫秒请求触发网关防重放。
 - 金额建议用字符串传入，例如 `'12.34'`，避免 PHP 浮点数精度问题。
 - 卡号、CVC、API 私钥、RSA 私钥不得写入普通业务日志。
 - HTTP 成功不代表业务成功，商户应检查 `$result->isSuccess()`、`code` 和业务 `status`。
