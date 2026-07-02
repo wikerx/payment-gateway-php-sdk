@@ -1,0 +1,30 @@
+{
+  "name": "wikerx/payment-gateway-php-sdk",
+  "description": "Payment Gateway OpenAPI PHP SDK for merchant server integration.",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.4",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-openssl": "*",
+    "phpseclib/phpseclib": "^3.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6"
+  },
+  "autoload": {
+    "psr-4": {
+      "Scott\\Payment\\Sdk\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Scott\\Payment\\Sdk\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit --colors=always",
+    "lint": "find src tests examples -name '*.php' -print0 | xargs -0 -n1 php -l"
+  }
+}
