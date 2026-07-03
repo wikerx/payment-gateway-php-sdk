@@ -9,8 +9,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../bootstrap.php';
 
-$client = openapi_client();
-$request = customer_create_request();
-log_result('创建客户真实调用-请求原始明文参数', $request);
-$result = $client->createCustomer($request);
-log_result('创建客户真实调用-响应原始明文参数', $result->toArray());
+run_example(static function (): void {
+    $client = openapi_client();
+    $request = customer_create_request();
+    log_result('创建客户真实调用-请求原始明文参数', $request);
+    $result = $client->createCustomer($request);
+    log_result('创建客户真实调用-响应原始明文参数', $result->toArray());
+});

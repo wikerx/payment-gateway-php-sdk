@@ -13,6 +13,37 @@ use Scott\Payment\Sdk\OpenApiClient;
 use Scott\Payment\Sdk\Support\OrderNoGenerator;
 
 /**
+ * 运行一个真实网关示例，并把异常转换成可读的 CLI 提示。
+ *
+ * PHP CLI 在不同版本和 ini 配置下对全局异常处理的呈现不完全一致；示例文件显式包裹入口可以避免商户看到整屏 Fatal stack trace。
+ *
+ * @param callable $callback 示例主体。
+ */
+function run_example(callable $callback): void
+{
+    try {
+        $callback();
+    } catch (Throwable $exception) {
+        handle_example_exception($exception);
+    }
+}
+
+/**
+ * 输出示例异常信息。
+ *
+ * @param Throwable $exception 示例执行异常。
+ */
+function handle_example_exception(Throwable $exception): void
+{
+    fwrite(STDERR, PHP_EOL . '示例执行失败: ' . get_class($exception) . PHP_EOL);
+    fwrite(STDERR, '错误信息: ' . $exception->getMessage() . PHP_EOL);
+    if (strpos($exception->getMessage(), 'Failed to connect') !== false || strpos($exception->getMessage(), 'Could not connect') !== false) {
+        fwrite(STDERR, '处理建议: 请确认 config/merchant-config.php 中 base_url 可访问，并且支付网关服务已启动；当前示例默认请求 http://localhost:58060。' . PHP_EOL);
+    }
+    exit(1);
+}
+
+/**
  * 创建示例使用的真实 OpenAPI 客户端。
  *
  * 该方法只加载 config/merchant-config.php 并实例化 SDK 客户端，不主动访问网关、不生成 JWT、不加密报文。

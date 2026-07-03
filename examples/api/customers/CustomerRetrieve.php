@@ -9,11 +9,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../bootstrap.php';
 
-$client = openapi_client();
-$customerId = create_customer_for_case($client);
-log_result('检索客户真实调用-请求参数', [
-    'customerId' => $customerId,
-    'requestPath' => '/pay-api/mer/customers/' . $customerId,
-]);
-$result = $client->retrieveCustomer($customerId);
-log_result('检索客户真实调用-响应原始明文参数', $result->toArray());
+run_example(static function (): void {
+    $client = openapi_client();
+    $customerId = create_customer_for_case($client);
+    log_result('检索客户真实调用-请求参数', [
+        'customerId' => $customerId,
+        'requestPath' => '/pay-api/mer/customers/' . $customerId,
+    ]);
+    $result = $client->retrieveCustomer($customerId);
+    log_result('检索客户真实调用-响应原始明文参数', $result->toArray());
+});

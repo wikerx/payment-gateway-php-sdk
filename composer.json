@@ -25,6 +25,7 @@
   },
   "scripts": {
     "test": "phpunit --colors=always",
-    "lint": "find src tests examples -name '*.php' -print0 | xargs -0 -n1 php -l"
+    "lint": "find src tests examples -name '*.php' -print0 | xargs -0 -n1 php -l",
+    "demo": "php -S 127.0.0.1:58082 examples/demo/router.php"
   }
 }

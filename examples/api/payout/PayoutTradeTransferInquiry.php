@@ -8,8 +8,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../bootstrap.php';
 
-$tradeNo = 'payout_202607021105485695090';
-$client = openapi_client();
-log_result('检索代付交易真实调用-请求参数', ['tradeNo' => $tradeNo, 'requestPath' => '/pay-api/payout/trade/transfer/' . $tradeNo]);
-$result = $client->retrievePayout($tradeNo);
-log_result('检索代付交易真实调用-响应原始明文参数', $result->toArray());
+run_example(static function (): void {
+    $tradeNo = 'payout_202607021105485695090';
+    $client = openapi_client();
+    log_result('检索代付交易真实调用-请求参数', ['tradeNo' => $tradeNo, 'requestPath' => '/pay-api/payout/trade/transfer/' . $tradeNo]);
+    $result = $client->retrievePayout($tradeNo);
+    log_result('检索代付交易真实调用-响应原始明文参数', $result->toArray());
+});

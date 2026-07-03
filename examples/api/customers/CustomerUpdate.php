@@ -9,13 +9,15 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../bootstrap.php';
 
-$client = openapi_client();
-$customerId = create_customer_for_case($client);
-$request = customer_update_request();
-log_result('更新客户真实调用-请求参数', [
-    'customerId' => $customerId,
-    'requestPath' => '/pay-api/mer/customers/' . $customerId,
-]);
-log_result('更新客户真实调用-请求原始明文参数', $request);
-$result = $client->updateCustomer($customerId, $request);
-log_result('更新客户真实调用-响应原始明文参数', $result->toArray());
+run_example(static function (): void {
+    $client = openapi_client();
+    $customerId = create_customer_for_case($client);
+    $request = customer_update_request();
+    log_result('更新客户真实调用-请求参数', [
+        'customerId' => $customerId,
+        'requestPath' => '/pay-api/mer/customers/' . $customerId,
+    ]);
+    log_result('更新客户真实调用-请求原始明文参数', $request);
+    $result = $client->updateCustomer($customerId, $request);
+    log_result('更新客户真实调用-响应原始明文参数', $result->toArray());
+});

@@ -222,6 +222,47 @@ php examples/api/customers/CustomerList.php
 退款、查询、取消示例中写死的 `tradeNo`、`charge`、`orderNo` 只是沙盒示例值。商户联调时应替换为自己上一步接口返回的真实标识。
 客户更新、检索、删除示例会先创建一个沙盒客户作为前置数据，方便商户直接运行单个 demo。
 
+如果看到类似错误：
+
+```text
+OpenAPI HTTP request failed: Failed to connect to localhost:58060
+```
+
+说明 SDK 已经完成 JWT、请求加密和 HTTP 请求准备，但 `base_url` 指向的网关地址不可连接。请先启动本地支付网关服务，或把 `config/merchant-config.php` 中的 `base_url` 改为可访问的沙盒网关地址。
+
+## 页面联调控制台
+
+SDK 示例内置轻量 PHP 页面联调控制台，适合平台内部和商户沙盒联调使用。启动方式：
+
+```bash
+composer demo
+```
+
+也可以直接使用 PHP 内置服务器：
+
+```bash
+php -S 127.0.0.1:58082 examples/demo/router.php
+```
+
+启动后访问：
+
+```text
+http://127.0.0.1:58082/demo/apis
+```
+
+控制台会按 API 文档分组展示客户、代收、退款申请、代付和余额查询接口。点击 API 后会进入参数页面，页面会自动从 `config/merchant-config.php` 读取商户号，并为订单号、邮箱、证件号等字段生成沙盒默认值。所有默认参数都可以在页面上修改，提交后由当前 PHP `OpenApiClient` 发起真实 OpenAPI 调用，并在页面下方展示请求明文、响应 JSON、关键响应字段说明和错误信息。
+
+代收和代付创建页面已内置常用联调控件：
+
+- `customerId` 和 `customer` 通过“客户提交方式”二选一，页面会按选择隐藏另一组字段，提交时也只组装选中的字段；
+- 创建收银台代收通过下拉选择 `paymentMethodTypes`，提交后会组装为单元素数组；
+- 创建直连代收和发起代付通过下拉选择币种、支付类型或支付方式；
+- 切换 `paymentMethod` 时会自动替换 `paymentMethodData` 示例参数，覆盖 `CARD`、`CASHAPP`、`PAY_PAL`、`ACH_DEBIT`、`UPI`。
+
+页面联调控制台使用真实 SDK 客户端，请求会发送到 `base_url`。发起代收、退款、代付、取消代付等操作可能创建沙盒交易或触发网关资金类业务校验；商户联调时应使用沙盒商户配置和测试网关地址。
+
+> 页面联调控制台会读取商户号、API 私钥和 RSA 密钥配置，并允许直接发起资金类 API。只建议在本地、内网、沙盒或受控测试环境启用，不要直接暴露到公网生产环境。
+
 ## API 调用示例
 
 ### 余额查询
