@@ -60,21 +60,17 @@ final class PayinWebhookVerifier
             . (string)($request['tradeNo'] ?? '')
             . (string)($request['orderNo'] ?? '')
             . (string)($request['currency'] ?? '')
-            . $this->amountText($request['amount'] ?? null)
+            . $this->text($request['amount'] ?? null)
             . (isset($request['status']) ? (string)$request['status'] : '')
             . (string)($request['code'] ?? '')
             . (string)($request['message'] ?? '');
     }
 
-    private function amountText($amount): string
+    private function text($value): string
     {
-        if ($amount === null || $amount === '') {
+        if ($value === null || $value === '') {
             return '';
         }
-        $text = (string)$amount;
-        if (strpos($text, '.') === false) {
-            return $text;
-        }
-        return rtrim(rtrim($text, '0'), '.');
+        return (string)$value;
     }
 }

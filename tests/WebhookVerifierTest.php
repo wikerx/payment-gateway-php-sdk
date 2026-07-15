@@ -38,7 +38,7 @@ final class WebhookVerifierTest extends TestCase
 
         $verifier = new PayinWebhookVerifier();
 
-        self::assertSame('1782901024000pay_123ORDER_123USD12.342succeededSucceeded', $verifier->buildSignSource('1782901024000', $request));
+        self::assertSame('1782901024000pay_123ORDER_123USD12.34002succeededSucceeded', $verifier->buildSignSource('1782901024000', $request));
         self::assertTrue($verifier->verify('1782901024000', $verifier->sign('1782901024000', $request), $request));
     }
 
@@ -60,7 +60,32 @@ final class WebhookVerifierTest extends TestCase
 
         $verifier = new PayoutWebhookVerifier();
 
-        self::assertSame('1782901024000payout_123USD3.1131040001003Failed', $verifier->buildSignSource('1782901024000', $request));
+        self::assertSame('1782901024000payout_123USD3.110031040001003Failed', $verifier->buildSignSource('1782901024000', $request));
         self::assertTrue($verifier->verify('1782901024000', $verifier->sign('1782901024000', $request), $request));
+    }
+
+    /**
+     * 验证代付回调 amount=19.00 时按网关原始金额字符串验签。
+     */
+    public function testPayoutWebhookShouldKeepGatewayAmountScale(): void
+    {
+        $request = [
+            'merNo' => '2607039255',
+            'tradeNo' => 'payout_202607151832120212391',
+            'orderNo' => 'dfu202607151832009826',
+            'currency' => 'USD',
+            'amount' => '19.00',
+            'paymentMethod' => 'PAY_PAL',
+            'completionDate' => '2026-07-15T10:35:25',
+            'status' => 3,
+            'code' => 'fail',
+            'message' => 'Fail',
+            'metadata' => 'myParam=1',
+        ];
+
+        $verifier = new PayoutWebhookVerifier();
+
+        self::assertSame('1784111725000payout_202607151832120212391USD19.003failFail', $verifier->buildSignSource('1784111725000', $request));
+        self::assertTrue($verifier->verify('1784111725000', $verifier->sign('1784111725000', $request), $request));
     }
 }

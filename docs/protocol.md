@@ -105,4 +105,5 @@ t + tradeNo + currency + amount + status + code + message
 lowercase_hex(sha256(signSource))
 ```
 
-金额字段会移除无意义的尾随 0，避免 `12.3400` 和 `12.34` 导致本地验签不一致。
+金额字段必须使用网关回调中的原始字符串参与验签，不能做数值化、四舍五入或裁剪尾随 0。
+例如网关回调 URL 中是 `amount=19.00`，签名原文就必须拼接 `19.00`，不能改成 `19`。

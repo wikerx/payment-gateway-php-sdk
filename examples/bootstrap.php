@@ -38,7 +38,7 @@ function handle_example_exception(Throwable $exception): void
     fwrite(STDERR, PHP_EOL . '示例执行失败: ' . get_class($exception) . PHP_EOL);
     fwrite(STDERR, '错误信息: ' . $exception->getMessage() . PHP_EOL);
     if (strpos($exception->getMessage(), 'Failed to connect') !== false || strpos($exception->getMessage(), 'Could not connect') !== false) {
-        fwrite(STDERR, '处理建议: 请确认 config/merchant-config.php 中 base_url 可访问，并且支付网关服务已启动；当前示例默认请求 http://localhost:58060。' . PHP_EOL);
+        fwrite(STDERR, '处理建议: 请确认 config/merchant-config.php 中 base_url 可访问，并且支付网关服务已启动；当前示例默认请求 http://192.168.2.114:58060。' . PHP_EOL);
     }
     exit(1);
 }

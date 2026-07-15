@@ -13,56 +13,64 @@
 
 ## 引入 SDK
 
-### 方式一：Composer 远程包
+### 方式一：GitHub VCS 安装（当前推荐）
 
-如果 SDK 已发布到 Composer 或私有 Composer 仓库，商户项目中执行：
+当前 SDK 尚未发布到 Packagist，商户不能只执行 `composer require wikerx/payment-gateway-php-sdk`。请先在商户项目根目录把 GitHub 仓库加入 Composer VCS 源，再安装 SDK：
 
 ```bash
-composer require wikerx/payment-gateway-php-sdk
+composer config repositories.payment-gateway-php-sdk vcs https://github.com/wikerx/payment-gateway-php-sdk.git
+composer require wikerx/payment-gateway-php-sdk:dev-main
 ```
 
-然后在业务代码中引入 Composer autoload：
-
-```php
-require_once __DIR__ . '/vendor/autoload.php';
-```
-
-### 方式二：本地 path repository
-
-如果商户需要先使用本地 SDK 目录联调，可以在商户项目的 `composer.json` 中加入：
+也可以手动修改商户项目的 `composer.json`：
 
 ```json
 {
   "repositories": [
     {
-      "type": "path",
-      "url": "/Users/scott/Documents/code/idea_success/Zorpay/payment-gateway-php-sdk",
-      "options": {
-        "symlink": true
-      }
+      "type": "vcs",
+      "url": "https://github.com/wikerx/payment-gateway-php-sdk.git"
     }
   ],
   "require": {
-    "wikerx/payment-gateway-php-sdk": "*"
+    "wikerx/payment-gateway-php-sdk": "dev-main@dev"
   }
 }
 ```
 
-然后执行：
+修改后执行：
 
 ```bash
 composer update wikerx/payment-gateway-php-sdk
 ```
 
+安装完成后，在业务代码中引入 Composer autoload：
+
+```php
+require_once __DIR__ . '/vendor/autoload.php';
+```
+
+### 方式二：Packagist 发布后安装
+
+等 SDK 发布到 Packagist 后，商户才可以直接执行：
+
+```bash
+composer require wikerx/payment-gateway-php-sdk
+```
+
+发布到 Packagist 之前，请使用上面的 GitHub VCS 安装方式。
+
 ### 方式三：直接运行 SDK examples
 
-在 SDK 根目录执行：
+如果是平台内部或 SDK 开发者直接克隆当前仓库调试 examples，在 SDK 根目录执行：
 
 ```bash
 composer install
 ```
 
 安装完成后会生成 `vendor/autoload.php`，`examples` 目录下的真实网关 demo 才能运行。
+
+本地 `path repository` 只建议 SDK 开发者在自己机器上调试，不建议写进商户接入文档。
 
 ## 配置
 
@@ -75,14 +83,14 @@ config/merchant-config.php
 当前示例配置使用测试商户 `2606177036`，默认请求：
 
 ```text
-http://localhost:58060
+http://192.168.2.114:58060
 ```
 
 配置完整示例：
 
 ```php
 return [
-    'base_url' => 'http://localhost:58060',
+    'base_url' => 'http://192.168.2.114:58060',
     'merchant_no' => '2606177036',
     'livemode' => false,
     'api_private_key' => '<merchant-api-private-key>',
@@ -96,7 +104,7 @@ return [
 
 | 配置项 | 必填 | 说明 |
 |---|---:|---|
-| `base_url` | 是 | 网关 OpenAPI 地址，例如 `http://localhost:58060` |
+| `base_url` | 是 | 网关 OpenAPI 地址，例如 `http://192.168.2.114:58060` |
 | `merchant_no` | 是 | 商户号，测试商户为 `2606177036` |
 | `livemode` | 是 | `false` 请求沙盒/测试数据源，`true` 请求生产数据源 |
 | `api_private_key` | 是 | JWT HS256 签名使用的商户 API 私钥 |
@@ -215,7 +223,7 @@ php examples/api/customers/CustomerList.php
 
 - 已执行 `composer install`；
 - `config/merchant-config.php` 中 `base_url` 可以访问；
-- 本地网关服务已启动在 `http://localhost:58060`，或已改成真实测试环境地址；
+- 本地网关服务已启动在 `http://192.168.2.114:58060`，或已改成真实测试环境地址；
 - `livemode=false` 与测试商户、测试密钥匹配；
 - 如果运行退款、查询、取消示例，已把代码里的 `tradeNo`、`charge`、`orderNo` 替换为自己的测试交易标识。
 
@@ -225,7 +233,7 @@ php examples/api/customers/CustomerList.php
 如果看到类似错误：
 
 ```text
-OpenAPI HTTP request failed: Failed to connect to localhost:58060
+OpenAPI HTTP request failed: Failed to connect to 192.168.2.114:58060
 ```
 
 说明 SDK 已经完成 JWT、请求加密和 HTTP 请求准备，但 `base_url` 指向的网关地址不可连接。请先启动本地支付网关服务，或把 `config/merchant-config.php` 中的 `base_url` 改为可访问的沙盒网关地址。

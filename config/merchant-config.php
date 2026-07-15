@@ -8,7 +8,7 @@ declare(strict_types=1);
  * 商户服务端可直接复制本文件到项目 config 目录；生产环境请关闭 debug_raw_log_enabled，并妥善保管 API 私钥和 RSA 私钥。
  */
 return [
-    'base_url' => 'http://localhost:58060',
+    'base_url' => 'http://192.168.2.114:58060',
     'merchant_no' => '2606177036',
     'livemode' => false,
     'api_private_key' => 'pi_test_IiLeEu803nK1p8nt8KY9ENPmWrnLKuwKV4MyrGoYtjr78O6317yWhl4CnELIf1tFse53fhErDCthW7ecoi5XlFOoAd0yxdf1fvo',
