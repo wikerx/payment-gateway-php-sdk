@@ -383,6 +383,10 @@ http://localhost:58080/payin.php
 http://localhost:58080/payout.php
 ```
 
+直接用浏览器打开上述地址时，如果没有 `t`、`signature` 和交易参数，页面会返回 `payin/payout webhook endpoint is running, waiting gateway callback`，表示回调服务已启动并等待网关通知。只有真实网关回调或你用 curl 携带完整 Header 和参数访问时，示例才会执行验签。
+
+示例脚本会把收到的请求头、请求参数、签名原文、期望签名、收到的签名和验签结果打印到 PHP server 日志，方便排查 `invalid signature`。
+
 如果网关无法访问商户本机 `localhost`，请把创建交易请求中的 `notifyUrl` 改成网关可访问的内网 IP、公网域名或穿透地址。
 
 回调处理建议：

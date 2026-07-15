@@ -7,16 +7,39 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/support.php';
 
-use Scott\Payment\Sdk\Support\JsonSupport;
 use Scott\Payment\Sdk\Webhook\PayinWebhookVerifier;
 
-$request = $_GET + JsonSupport::decode(file_get_contents('php://input') ?: '{}');
+[$request, $rawBody, $bodyError] = payment_gateway_webhook_read_request();
 $timestamp = $_SERVER['HTTP_T'] ?? '';
 $signature = $_SERVER['HTTP_SIGNATURE'] ?? '';
 
+if (payment_gateway_webhook_is_probe($timestamp, $signature, $request)) {
+    http_response_code(200);
+    echo 'payin webhook endpoint is running, waiting gateway callback';
+    return;
+}
+
+if ($bodyError !== null) {
+    http_response_code(400);
+    echo $bodyError;
+    return;
+}
+
 $verifier = new PayinWebhookVerifier();
-if (!$verifier->verify($timestamp, $signature, $request)) {
+$verified = $verifier->verify($timestamp, $signature, $request);
+payment_gateway_webhook_log('payin', [
+    'headers' => payment_gateway_webhook_headers(),
+    'params' => $request,
+    'rawBody' => $rawBody,
+    'signSource' => $verifier->buildSignSource($timestamp, $request),
+    'expectedSignature' => $verifier->sign($timestamp, $request),
+    'receivedSignature' => $signature,
+    'verified' => $verified,
+]);
+
+if (!$verified) {
     http_response_code(401);
     echo 'invalid signature';
     return;
